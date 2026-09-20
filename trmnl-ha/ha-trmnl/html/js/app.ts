@@ -29,7 +29,7 @@ import {
   ByosLogin,
   ImportSchedules,
 } from './api-client.js'
-import type { PaletteOption } from './palette-options.js'
+import { DEFAULT_PALETTE, type PaletteOption } from './palette-options.js'
 import type {
   Schedule,
   CropRegion,
@@ -402,13 +402,21 @@ class App {
     }
   }
 
-  async updateScheduleFromForm(): Promise<void> {
+  async updateScheduleFromForm(presetDithering?: Partial<Schedule['dithering']>): Promise<void> {
     const schedule = this.#scheduleManager.activeSchedule
     if (!schedule) return
 
     const oldName = schedule.name
 
     const updates = this.#buildScheduleUpdates(schedule)
+    if (presetDithering) {
+      updates.dithering = {
+        ...updates.dithering,
+        ...presetDithering,
+        palette: presetDithering.palette ?? DEFAULT_PALETTE,
+        bitDepth: presetDithering.bitDepth,
+      }
+    }
 
     await this.#scheduleManager.update(schedule.id, updates)
 
@@ -489,9 +497,10 @@ class App {
       invert: checkbox('s_invert'),
       timestamp: checkbox('s_timestamp'),
       dithering: {
+        bitDepth: schedule.dithering?.bitDepth,
         enabled: checkbox('s_dithering'),
         method: select('s_method') || 'floyd-steinberg',
-        palette: select('s_palette') || 'gray-4',
+        palette: select('s_palette') || DEFAULT_PALETTE,
         gammaCorrection:
           (document.getElementById('s_gamma') as HTMLInputElement | null)
             ?.checked ?? true,
@@ -822,8 +831,9 @@ class App {
   // DEVICE PRESET OPERATIONS
   // =============================================================================
 
-  applyDevicePreset(): void {
-    this.#devicePresetsManager.applyDevicePreset()
+  async applyDevicePreset(): Promise<void> {
+    const preset = this.#devicePresetsManager.applyDevicePreset()
+    if (preset) await this.updateScheduleFromForm(preset.dithering as Partial<Schedule['dithering']>)
   }
 
   applyDashboardSelection(): void {

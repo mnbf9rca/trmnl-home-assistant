@@ -10,6 +10,7 @@
  */
 
 import gmLib, { State } from 'gm'
+import { DEFAULT_PALETTE } from '../html/js/palette-options.js'
 
 const gm = gmLib.subClass({ imageMagick: true })
 
@@ -149,7 +150,7 @@ export function validateDitheringOptions(
   options: Partial<DitheringOptions> = {}
 ): ValidatedDitheringOptions {
   const palette = (
-    SUPPORTED_PALETTES.includes(options.palette!) ? options.palette : 'gray-4'
+    SUPPORTED_PALETTES.includes(options.palette!) ? options.palette : DEFAULT_PALETTE
   )!
   const isColor = isColorPalette(palette)
 
@@ -507,7 +508,7 @@ export async function applyDithering(
 ): Promise<Buffer> {
   const {
     method = 'floyd-steinberg',
-    palette = 'gray-4',
+    palette = DEFAULT_PALETTE,
     gammaCorrection = true,
     levelsEnabled = false,
     blackLevel = 0,
@@ -566,7 +567,7 @@ export async function applyDithering(
   } else {
     const colors = isGrayscalePaletteMode
       ? GRAYSCALE_PALETTES[palette as GrayscalePalette]
-      : GRAYSCALE_PALETTES['gray-4']
+      : GRAYSCALE_PALETTES[DEFAULT_PALETTE]
     const result = applyGrayscaleDithering(image, {
       method,
       colors,
