@@ -604,21 +604,21 @@ export class RenderScheduleContent {
           <p class="text-xs text-gray-500 mt-1">Flips black↔white (for inverted e-ink displays)</p>
 
           <!-- Timestamp overlay toggle -->
-          <div class="flex flex-wrap items-center gap-3 mt-3">
-            <label class="flex items-center" title="Stamp the capture time on the screenshot">
+          <div class="flex items-center gap-1 mt-3">
+            <label class="flex items-center whitespace-nowrap" title="Stamp the capture time on the screenshot">
               <input type="checkbox" id="s_timestamp" ${s.timestamp ? 'checked' : ''}
                 class="h-4 w-4 border-gray-300 rounded"
                 onchange="window.app.updateScheduleFromForm()" />
-              <span class="ml-2 text-sm text-gray-700">Show Capture Time</span>
+              <span class="ml-2 text-sm text-gray-700">Show capture time in</span>
             </label>
-            <label for="s_timestamp_position" class="text-sm text-gray-700">Timestamp Corner</label>
-            <select id="s_timestamp_position" class="px-2 py-1 border border-gray-300 rounded-md text-sm"
+            <select id="s_timestamp_position" aria-label="Timestamp corner" class="px-2 py-1 border border-gray-300 rounded-md text-sm"
               onchange="window.app.updateScheduleFromForm()">
               ${TIMESTAMP_POSITIONS.map((value) => {
-                const label = value.charAt(0).toUpperCase() + value.slice(1).replace('-', ' ')
+                const label = value.replace('-', ' ')
                 return `<option value="${value}" ${(s.timestampPosition || 'bottom-right') === value ? 'selected' : ''}>${label}</option>`
               }).join('')}
             </select>
+            <span class="text-sm text-gray-700">corner</span>
           </div>
           <p class="text-xs text-gray-500 mt-1">Capture time in the selected dashboard corner, before rotation</p>
         </div>
