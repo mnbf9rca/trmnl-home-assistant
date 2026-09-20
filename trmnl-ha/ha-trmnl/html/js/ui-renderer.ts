@@ -16,6 +16,7 @@
  */
 
 import type { Schedule } from '../../types/domain.js'
+import { TIMESTAMP_POSITIONS } from '../shared/timestamp-position.js'
 import { deliveryModeFor } from '../shared/byos-constants.js'
 import type { PaletteOption } from './palette-options.js'
 import { buildScreenshotParams } from '../shared/build-screenshot-params.js'
@@ -603,15 +604,23 @@ export class RenderScheduleContent {
           <p class="text-xs text-gray-500 mt-1">Flips black↔white (for inverted e-ink displays)</p>
 
           <!-- Timestamp overlay toggle -->
-          <div class="flex items-center mt-3">
-            <label class="flex items-center" title="Stamp the capture time in the bottom-right corner of the screenshot">
+          <div class="flex items-center gap-1 mt-3">
+            <label class="flex items-center whitespace-nowrap" title="Stamp the capture time on the screenshot">
               <input type="checkbox" id="s_timestamp" ${s.timestamp ? 'checked' : ''}
                 class="h-4 w-4 border-gray-300 rounded"
                 onchange="window.app.updateScheduleFromForm()" />
-              <span class="ml-2 text-sm text-gray-700">Show Capture Time</span>
+              <span class="ml-2 text-sm text-gray-700">Show capture time in</span>
             </label>
+            <select id="s_timestamp_position" aria-label="Timestamp corner" class="px-2 py-1 border border-gray-300 rounded-md text-sm"
+              onchange="window.app.updateScheduleFromForm()">
+              ${TIMESTAMP_POSITIONS.map((value) => {
+                const label = value.replace('-', ' ')
+                return `<option value="${value}" ${(s.timestampPosition || 'bottom-right') === value ? 'selected' : ''}>${label}</option>`
+              }).join('')}
+            </select>
+            <span class="text-sm text-gray-700">corner</span>
           </div>
-          <p class="text-xs text-gray-500 mt-1">Small timestamp in the bottom-right corner so you can tell at a glance how fresh the screen is</p>
+          <p class="text-xs text-gray-500 mt-1">Capture time in the selected dashboard corner, before rotation</p>
         </div>
       </div>
     `

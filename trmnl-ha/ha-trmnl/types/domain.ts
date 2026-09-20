@@ -7,6 +7,8 @@
  * @module types/domain
  */
 
+import type { TIMESTAMP_POSITIONS } from '../html/shared/timestamp-position.js'
+
 // =============================================================================
 // VIEWPORT & DIMENSIONS
 // =============================================================================
@@ -34,6 +36,9 @@ export type ImageFormat = 'png' | 'jpeg' | 'bmp'
 
 /** Valid rotation angles in degrees */
 export type RotationAngle = 90 | 180 | 270
+
+/** Timestamp corner relative to the capture, before rotation */
+export type TimestampPosition = typeof TIMESTAMP_POSITIONS[number]
 
 /** Grayscale palette types for e-ink displays */
 export type GrayscalePalette = 'bw' | 'gray-4' | 'gray-16' | 'gray-256'
@@ -111,8 +116,9 @@ export interface ScreenshotParams {
   /** Invert colors (for e-ink displays) */
   invert: boolean
 
-  /** Stamp the capture time in the bottom-right corner */
+  /** Stamp the capture time */
   timestamp?: boolean
+  timestampPosition?: TimestampPosition
 
   /** Output image format */
   format: ImageFormat
@@ -274,8 +280,9 @@ export interface Schedule {
   /** Invert colors */
   invert: boolean
 
-  /** Stamp the capture time in the bottom-right corner */
+  /** Stamp the capture time */
   timestamp?: boolean
+  timestampPosition?: TimestampPosition
 
   /** Dithering configuration */
   dithering: DitheringConfig

@@ -4,10 +4,11 @@
  * @module tests/unit/dithering
  */
 
-import { describe, it, expect, beforeAll } from 'bun:test'
-import { execSync } from 'node:child_process'
+import { describe, it, expect, beforeAll, setSystemTime } from 'bun:test'
+import { execSync, execFileSync } from 'node:child_process'
 import {
   processImage,
+  formatTimestamp,
   applyDithering,
   convertToFormat,
   getImageInfo,
@@ -17,7 +18,7 @@ import {
   isFullSpectrumPalette,
   validateDitheringOptions,
 } from '../../lib/dithering.js'
-import type { DitheringMethod } from '../../types/domain.js'
+import type { DitheringMethod, TimestampPosition } from '../../types/domain.js'
 import gmLib from 'gm'
 
 const gm = gmLib.subClass({ imageMagick: true })
@@ -51,6 +52,43 @@ function canAnnotateText(): boolean {
 }
 
 const itWithFont = canAnnotateText() ? it : it.skip
+
+function stampBounds(image: Buffer, width: number) {
+  const pixels = execFileSync('convert', ['-', '-depth', '8', 'gray:-'], {
+    input: image, maxBuffer: 10_000_000,
+  })
+  let left = width, top = pixels.length / width, right = -1, bottom = -1
+  for (let i = 0; i < pixels.length; i++) {
+    if (pixels[i]! < 128) {
+      const x = i % width, y = Math.floor(i / width)
+      left = Math.min(left, x)
+      right = Math.max(right, x)
+      top = Math.min(top, y)
+      bottom = Math.max(bottom, y)
+    }
+  }
+  expect(right).toBeGreaterThan(left)
+  return { left, top, right, bottom, width: right - left + 1, height: bottom - top + 1 }
+}
+
+function whiteImage(width: number, height: number): Buffer {
+  return execFileSync('convert', ['-size', `${width}x${height}`, 'xc:white', 'png:-'])
+}
+
+// ImageMagick's wall clock is independent of Bun's frozen capture time.
+function withoutWriteTime(buffer: Buffer): Buffer {
+  const chunks = [buffer.subarray(0, 8)]
+  for (let offset = 8; offset < buffer.length;) {
+    const end = offset + buffer.readUInt32BE(offset) + 12
+    const type = buffer.toString('ascii', offset + 4, offset + 8)
+    const text = buffer.toString('ascii', offset + 8, end - 4)
+    if (type !== 'tIME' && !(type === 'tEXt' && /^date:(create|modify|timestamp)\0/.test(text))) {
+      chunks.push(buffer.subarray(offset, end))
+    }
+    offset = end
+  }
+  return Buffer.concat(chunks)
+}
 
 describeDithering('Dithering Module', () => {
   let testImageBuffer: Buffer
@@ -257,6 +295,65 @@ describeDithering('Dithering Module', () => {
   // ==========================================================================
 
   describe('processImage', () => {
+    for (const width of [480, 758, 800]) {
+      itWithFont(`preserves legacy 14pt PNG bytes at ${width}px except write-time metadata`, async () => {
+        setSystemTime(new Date('2026-09-20T12:34:00Z'))
+        try {
+          const input = whiteImage(width, 480)
+          const legacy = execFileSync('convert', ['-', '-gravity', 'SouthEast', '-undercolor', 'white',
+            '-fill', 'black', '-pointsize', '14', '-annotate', '+4+4', ` ${formatTimestamp(new Date())} `, 'png:-'], { input })
+          const actual = await processImage(input, { timestamp: true })
+          expect(withoutWriteTime(actual).equals(withoutWriteTime(legacy))).toBe(true)
+          expect(stampBounds(actual, width)).toEqual(stampBounds(legacy, width))
+        } finally {
+          setSystemTime()
+        }
+      })
+    }
+
+    itWithFont('scales the timestamp linearly with capture width', async () => {
+      setSystemTime(new Date('2026-09-20T12:34:00Z'))
+      try {
+        for (const [width, points] of [[800, 14], [1448, 25.34], [1600, 28]] as const) {
+          const input = whiteImage(width, 1072)
+          const reference = execFileSync('convert', ['-', '-gravity', 'SouthEast', '-undercolor', 'white',
+            '-fill', 'black', '-pointsize', String(points), '-annotate', '+4+4', ` ${formatTimestamp(new Date())} `, 'png:-'], { input })
+          const actual = await processImage(input, { timestamp: true })
+          expect(stampBounds(actual, width)).toEqual(stampBounds(reference, width))
+        }
+      } finally {
+        setSystemTime()
+      }
+    })
+
+    for (const position of ['bottom-right', 'bottom-left', 'top-left', 'top-right'] as TimestampPosition[]) {
+      itWithFont(`draws the timestamp in ${position} before rotation`, async () => {
+        const input = whiteImage(800, 480)
+        const stamped = await processImage(input, { timestamp: true, timestampPosition: position })
+        const bounds = stampBounds(stamped, 800)
+        if (position.endsWith('left')) {
+          expect(bounds.left).toBeLessThan(20)
+          expect(bounds.right).toBeLessThan(400)
+        } else {
+          expect(bounds.right).toBeGreaterThan(780)
+          expect(bounds.left).toBeGreaterThan(400)
+        }
+        if (position.startsWith('top')) {
+          expect(bounds.top).toBeLessThan(20)
+          expect(bounds.bottom).toBeLessThan(240)
+        } else {
+          expect(bounds.bottom).toBeGreaterThan(460)
+          expect(bounds.top).toBeGreaterThan(240)
+        }
+        const rotated = await processImage(input, { timestamp: true, timestampPosition: position, rotate: 90 })
+        expect(stampBounds(rotated, 480)).toEqual({
+          left: 479 - bounds.bottom, right: 479 - bounds.top,
+          top: bounds.left, bottom: bounds.right,
+          width: bounds.height, height: bounds.width,
+        })
+      })
+    }
+
     it('returns processed image buffer', async () => {
       const result = await processImage(testImageBuffer, {
         format: 'png',

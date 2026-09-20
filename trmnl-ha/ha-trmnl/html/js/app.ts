@@ -487,6 +487,7 @@ class App {
       wait: this.#parseWait(input('s_wait')),
       invert: checkbox('s_invert'),
       timestamp: checkbox('s_timestamp'),
+      timestampPosition: (select('s_timestamp_position') || 'bottom-right') as Schedule['timestampPosition'],
       dithering: {
         enabled: checkbox('s_dithering'),
         method: select('s_method') || 'floyd-steinberg',
