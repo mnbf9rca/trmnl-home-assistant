@@ -7,6 +7,8 @@
  * @module types/domain
  */
 
+import type { TIMESTAMP_POSITIONS } from '../html/shared/timestamp-position.js'
+
 // =============================================================================
 // VIEWPORT & DIMENSIONS
 // =============================================================================
@@ -36,7 +38,7 @@ export type ImageFormat = 'png' | 'jpeg' | 'bmp'
 export type RotationAngle = 90 | 180 | 270
 
 /** Timestamp corner relative to the capture, before rotation */
-export type TimestampPosition = 'bottom-right' | 'bottom-left' | 'top-left' | 'top-right'
+export type TimestampPosition = typeof TIMESTAMP_POSITIONS[number]
 
 /** Grayscale palette types for e-ink displays */
 export type GrayscalePalette = 'bw' | 'gray-4' | 'gray-16' | 'gray-256'

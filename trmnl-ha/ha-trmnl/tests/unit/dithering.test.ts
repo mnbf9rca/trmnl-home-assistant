@@ -295,19 +295,21 @@ describeDithering('Dithering Module', () => {
   // ==========================================================================
 
   describe('processImage', () => {
-    itWithFont('preserves legacy 14pt PNG bytes at 800px except write-time metadata', async () => {
-      setSystemTime(new Date('2026-09-20T12:34:00Z'))
-      try {
-        const input = whiteImage(800, 480)
-        const legacy = execFileSync('convert', ['-', '-gravity', 'SouthEast', '-undercolor', 'white',
-          '-fill', 'black', '-pointsize', '14', '-annotate', '+4+4', ` ${formatTimestamp(new Date())} `, 'png:-'], { input })
-        const actual = await processImage(input, { timestamp: true })
-        expect(withoutWriteTime(actual).equals(withoutWriteTime(legacy))).toBe(true)
-        expect(stampBounds(actual, 800)).toEqual(stampBounds(legacy, 800))
-      } finally {
-        setSystemTime()
-      }
-    })
+    for (const width of [480, 758, 800]) {
+      itWithFont(`preserves legacy 14pt PNG bytes at ${width}px except write-time metadata`, async () => {
+        setSystemTime(new Date('2026-09-20T12:34:00Z'))
+        try {
+          const input = whiteImage(width, 480)
+          const legacy = execFileSync('convert', ['-', '-gravity', 'SouthEast', '-undercolor', 'white',
+            '-fill', 'black', '-pointsize', '14', '-annotate', '+4+4', ` ${formatTimestamp(new Date())} `, 'png:-'], { input })
+          const actual = await processImage(input, { timestamp: true })
+          expect(withoutWriteTime(actual).equals(withoutWriteTime(legacy))).toBe(true)
+          expect(stampBounds(actual, width)).toEqual(stampBounds(legacy, width))
+        } finally {
+          setSystemTime()
+        }
+      })
+    }
 
     itWithFont('scales the timestamp linearly with capture width', async () => {
       setSystemTime(new Date('2026-09-20T12:34:00Z'))

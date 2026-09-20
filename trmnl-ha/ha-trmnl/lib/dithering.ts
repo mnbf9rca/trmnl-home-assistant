@@ -391,14 +391,14 @@ export async function annotateTimestamp(
 ): Promise<Buffer> {
   try {
     const { width } = await getImageInfo(imageBuffer)
-    // Scale linearly with capture width: 14pt at 800px, point size = 14 * width / 800.
-    const pointSize = 14 * width / 800
+    // Keep at least 14pt; scale wider captures with point size = max(14, 14 * width / 800).
+    const pointSize = Math.max(14, 14 * width / 800)
     const gravity = {
       'bottom-right': 'SouthEast',
       'bottom-left': 'SouthWest',
       'top-left': 'NorthWest',
       'top-right': 'NorthEast',
-    }[position] ?? 'SouthEast'
+    }[position]
 
     const image = gm(imageBuffer).out(
       '-gravity',

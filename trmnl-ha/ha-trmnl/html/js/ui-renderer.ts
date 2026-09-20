@@ -16,6 +16,7 @@
  */
 
 import type { Schedule } from '../../types/domain.js'
+import { TIMESTAMP_POSITIONS } from '../shared/timestamp-position.js'
 import { deliveryModeFor } from '../shared/byos-constants.js'
 import type { PaletteOption } from './palette-options.js'
 import { buildScreenshotParams } from '../shared/build-screenshot-params.js'
@@ -613,10 +614,10 @@ export class RenderScheduleContent {
             <label for="s_timestamp_position" class="text-sm text-gray-700">Timestamp Corner</label>
             <select id="s_timestamp_position" class="px-2 py-1 border border-gray-300 rounded-md text-sm"
               onchange="window.app.updateScheduleFromForm()">
-              ${[
-                ['bottom-right', 'Bottom right'], ['bottom-left', 'Bottom left'],
-                ['top-left', 'Top left'], ['top-right', 'Top right'],
-              ].map(([value, label]) => `<option value="${value}" ${(s.timestampPosition || 'bottom-right') === value ? 'selected' : ''}>${label}</option>`).join('')}
+              ${TIMESTAMP_POSITIONS.map((value) => {
+                const label = value.charAt(0).toUpperCase() + value.slice(1).replace('-', ' ')
+                return `<option value="${value}" ${(s.timestampPosition || 'bottom-right') === value ? 'selected' : ''}>${label}</option>`
+              }).join('')}
             </select>
           </div>
           <p class="text-xs text-gray-500 mt-1">Capture time in the selected dashboard corner, before rotation</p>

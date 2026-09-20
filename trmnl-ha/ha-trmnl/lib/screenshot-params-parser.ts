@@ -7,6 +7,7 @@
  */
 
 import { VALID_FORMATS, VALID_ROTATIONS } from '../const.js'
+import { TIMESTAMP_POSITIONS } from '../html/shared/timestamp-position.js'
 import type {
   Viewport,
   CropRegion,
@@ -182,7 +183,7 @@ export class ScreenshotParamsParser {
     // Timestamp overlay
     const timestamp = url.searchParams.has('timestamp')
     const corner = url.searchParams.get('timestamp_position') as TimestampPosition
-    const timestampPosition = ['bottom-right', 'bottom-left', 'top-left', 'top-right'].includes(corner)
+    const timestampPosition = TIMESTAMP_POSITIONS.includes(corner)
       ? corner : 'bottom-right'
 
     // Format
