@@ -468,6 +468,7 @@ class App {
         height: parseIntOrDefault(input('s_height'), schedule.viewport.height),
       },
       device: select('devicePreset') || null,
+      crop_fit: checkbox('s_crop_fit'),
       crop: {
         enabled: checkbox('s_crop_enabled'),
         x: parseIntOrDefault(input('s_crop_x'), 0),

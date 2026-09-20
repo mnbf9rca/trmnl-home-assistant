@@ -158,6 +158,7 @@ export interface ScreenshotCaptureParams {
   invert?: boolean
   dithering?: DitheringConfig
   crop?: CropRegion | null
+  cropFit?: boolean
   timestamp?: boolean
 }
 
@@ -658,11 +659,13 @@ export class Browser {
    * Captures screenshot of current page with cropping and image processing.
    */
   async screenshotPage({
+    viewport,
     format = 'png',
     rotate,
     invert,
     dithering,
     crop,
+    cropFit,
     timestamp,
   }: ScreenshotCaptureParams): Promise<ScreenshotResult> {
     if (this.#busy) throw new Error('Browser is busy')
@@ -671,12 +674,13 @@ export class Browser {
     this.#busy = true
     try {
       const page = await this.#getPage()
+      const hasCrop = crop && crop.width > 0 && crop.height > 0
 
       // Capture screenshot (use crop clip if specified, otherwise full viewport)
       const screenshotData = await timed('capture.screenshot', () =>
         page.screenshot({
           type: 'png',
-          ...(crop && crop.width > 0 && crop.height > 0 && {
+          ...(hasCrop && {
             clip: {
               x: crop.x,
               y: crop.y,
@@ -691,6 +695,7 @@ export class Browser {
       const startProcess = Date.now()
       const image = await timed('capture.process', () =>
         this.#deps.processImage(Buffer.from(screenshotData), {
+          ...(cropFit && hasCrop && { fitToViewport: viewport }),
           format,
           rotate,
           invert,

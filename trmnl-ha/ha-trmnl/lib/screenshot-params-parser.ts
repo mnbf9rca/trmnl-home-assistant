@@ -33,6 +33,7 @@ const SYSTEM_PARAMS = new Set([
   'crop_y',
   'crop_width',
   'crop_height',
+  'crop_fit',
   'invert',
   'timestamp',
   'format',
@@ -63,6 +64,7 @@ export interface ParsedScreenshotParams {
   extraWait?: number
   zoom: number
   crop: CropRegion | null
+  cropFit: boolean
   invert: boolean
   timestamp: boolean
   format: ImageFormat
@@ -202,6 +204,7 @@ export class ScreenshotParamsParser {
       extraWait,
       zoom,
       crop,
+      cropFit: url.searchParams.has('crop_fit'),
       invert,
       timestamp,
       format,

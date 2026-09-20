@@ -678,11 +678,13 @@ export class RenderScheduleContent {
           </div>
         </div>
         <p class="text-xs text-gray-500 mt-1">Use "Crop" button to visually adjust crop region</p>
-        <div class="mt-2 px-3 py-2 rounded-md" style="background-color: #fef3c7; border: 1px solid #fbbf24">
-          <p class="text-xs" style="color: #92400e">
-            <strong>Note:</strong> When crop is enabled, the final image size will be the crop dimensions (Width × Height), not the viewport size.
-          </p>
-        </div>
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer mt-2">
+          <input type="checkbox" id="s_crop_fit" ${s.crop_fit ? 'checked' : ''}
+            class="h-4 w-4 border-gray-300 rounded"
+            onchange="window.app.updateScheduleFromForm()" />
+          Fit crop to viewport
+        </label>
+        <p class="text-xs text-gray-500 mt-1">Before rotation, fit scales an enabled crop to the viewport with preserved proportions and white padding; with fit off, the crop keeps its original dimensions.</p>
       </div>
     `
   }

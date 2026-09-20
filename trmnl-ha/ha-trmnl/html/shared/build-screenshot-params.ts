@@ -59,6 +59,7 @@ export function buildScreenshotParams(
     params.append('crop_y', String(schedule.crop.y))
     params.append('crop_width', String(schedule.crop.width))
     params.append('crop_height', String(schedule.crop.height))
+    if (schedule.crop_fit) params.append('crop_fit', '')
   }
 
   // Wait time

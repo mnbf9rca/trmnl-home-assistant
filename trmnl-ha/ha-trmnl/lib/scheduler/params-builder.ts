@@ -40,6 +40,7 @@ export function buildParams(schedule: Schedule): ScreenshotParams {
     format: schedule.format || DEFAULTS.format,
     viewport: schedule.viewport ?? DEFAULTS.viewport,
     crop: schedule.crop?.enabled ? schedule.crop : null,
+    cropFit: schedule.crop_fit ?? false,
     dithering: schedule.dithering?.enabled ? schedule.dithering : undefined,
     extraWait: schedule.wait ?? DEFAULTS.extraWait,
     zoom: schedule.zoom ?? DEFAULTS.zoom,

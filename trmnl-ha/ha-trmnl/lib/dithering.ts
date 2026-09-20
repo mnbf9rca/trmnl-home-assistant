@@ -32,6 +32,7 @@ import type {
   GrayscalePalette,
   BitDepth,
   CompressionLevel,
+  Viewport,
 } from '../types/domain.js'
 import type {
   DitheringStrategy,
@@ -91,6 +92,8 @@ export function isFullSpectrumPalette(palette: string): boolean {
 
 /** Options for image processing */
 export interface ProcessImageOptions {
+  /** Scale uniformly and pad white to these dimensions before other processing */
+  fitToViewport?: Viewport
   format?: ImageFormat
   rotate?: RotationAngle
   invert?: boolean
@@ -324,6 +327,20 @@ export async function processImage(
   const { format = 'png', rotate, invert, dithering, timestamp } = options
 
   let buffer = imageBuffer
+
+  if (options.fitToViewport) {
+    const { width, height } = options.fitToViewport
+    buffer = await timed('dither.resize', () =>
+      streamToBuffer(
+        gm(buffer)
+          .resize(width, height)
+          .background('white')
+          .gravity('Center')
+          .extent(width, height),
+        { format: 'png' },
+      ),
+    )
+  }
 
   // Annotate before dithering so the text survives 1-bit palettes and
   // format conversion like any other page content

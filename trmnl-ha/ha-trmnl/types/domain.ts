@@ -108,6 +108,9 @@ export interface ScreenshotParams {
   /** Crop region for partial screenshots */
   crop: CropRegion | null
 
+  /** Fit an enabled crop to the viewport before rotation (default: false) */
+  cropFit?: boolean
+
   /** Invert colors (for e-ink displays) */
   invert: boolean
 
@@ -249,6 +252,9 @@ export interface Schedule {
 
   /** Crop region configuration */
   crop: CropRegion & { enabled: boolean }
+
+  /** Fit the crop to the viewport with white padding (default: false) */
+  crop_fit?: boolean
 
   /** Output image format */
   format: ImageFormat
