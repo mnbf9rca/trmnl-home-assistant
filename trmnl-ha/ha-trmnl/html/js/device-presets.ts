@@ -14,7 +14,7 @@
  */
 
 import { LoadPresets } from './api-client.js'
-import type { PresetsConfig } from '../../types/domain.js'
+import type { PresetsConfig, SchedulePreset } from '../../types/domain.js'
 
 /** Home Assistant config structure */
 interface HassConfig {
@@ -127,17 +127,17 @@ export class DevicePresetsManager {
   /**
    * Applies selected device preset to form inputs.
    */
-  applyDevicePreset(): boolean {
+  applyDevicePreset(): SchedulePreset | null {
     const select = document.getElementById(
       'devicePreset',
     ) as HTMLSelectElement | null
-    if (!select) return false
+    if (!select) return null
 
     const option = select.options[select.selectedIndex]
 
     if (!option.value) {
       document.getElementById('deviceInfo')?.classList.add('hidden')
-      return false
+      return null
     }
 
     const device = JSON.parse(option.dataset.device || '{}')
@@ -151,12 +151,10 @@ export class DevicePresetsManager {
 
     if (widthInput && device.viewport?.width) {
       widthInput.value = device.viewport.width
-      widthInput.dispatchEvent(new Event('change'))
     }
 
     if (heightInput && device.viewport?.height) {
       heightInput.value = device.viewport.height
-      heightInput.dispatchEvent(new Event('change'))
     }
 
     // Update crop dimensions to match device viewport
@@ -175,7 +173,6 @@ export class DevicePresetsManager {
       ) as HTMLSelectElement | null
       if (rotateSelect) {
         rotateSelect.value = device.rotate
-        rotateSelect.dispatchEvent(new Event('change'))
       }
     }
 
@@ -185,7 +182,6 @@ export class DevicePresetsManager {
       ) as HTMLSelectElement | null
       if (formatSelect) {
         formatSelect.value = device.format
-        formatSelect.dispatchEvent(new Event('change'))
       }
     }
 
@@ -198,7 +194,7 @@ export class DevicePresetsManager {
     }
     infoDiv?.classList.remove('hidden')
 
-    return true
+    return device
   }
 
   /**

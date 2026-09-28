@@ -9,6 +9,34 @@
 import { describe, it, expect } from 'bun:test'
 import { buildParams, getDefaults } from '../../lib/scheduler/params-builder.js'
 import { buildSchedule } from '../helpers/schedule-fixtures.js'
+import { buildScreenshotParams } from '../../html/shared/build-screenshot-params.js'
+import { ScreenshotParamsParser } from '../../lib/screenshot-params-parser.js'
+
+it('carries the timestamp corner through scheduled and preview requests', () => {
+  const schedule = buildSchedule({ timestamp: true, timestampPosition: 'top-left' })
+  expect(buildParams(schedule).timestampPosition).toBe('top-left')
+  const query = buildScreenshotParams(schedule)
+  expect(query.get('timestamp_position')).toBe('top-left')
+  const parsed = new ScreenshotParamsParser().call(new URL(`http://localhost/lovelace/0?${query}&kiosk`))
+  expect(parsed?.timestampPosition).toBe('top-left')
+  expect(parsed?.pagePath).toBe('/lovelace/0?kiosk')
+})
+
+it('defaults missing or invalid timestamp corners to bottom-right', () => {
+  for (const position of ['', '&timestamp_position=invalid']) {
+    const parsed = new ScreenshotParamsParser().call(new URL(`http://localhost/?viewport=800x480${position}`))
+    expect(parsed?.timestampPosition).toBe('bottom-right')
+  }
+  expect(buildScreenshotParams(buildSchedule()).has('timestamp_position')).toBe(false)
+})
+
+it('preserves the preview corner when timestamps are enabled globally instead of per schedule', () => {
+  const schedule = buildSchedule({ timestamp: false, timestampPosition: 'top-left' })
+  const query = buildScreenshotParams(schedule)
+  expect(query.has('timestamp')).toBe(false)
+  const parsed = new ScreenshotParamsParser().call(new URL(`http://localhost/?${query}`))
+  expect(parsed?.timestampPosition).toBe(buildParams(schedule).timestampPosition)
+})
 
 describe('params-builder', () => {
   // ==========================================================================

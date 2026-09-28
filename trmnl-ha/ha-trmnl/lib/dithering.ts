@@ -27,11 +27,13 @@ import type {
   DitheringMethod,
   Palette,
   RotationAngle,
+  TimestampPosition,
   ImageFormat,
   ColorPalette,
   GrayscalePalette,
   BitDepth,
   CompressionLevel,
+  Viewport,
 } from '../types/domain.js'
 import type {
   DitheringStrategy,
@@ -91,12 +93,15 @@ export function isFullSpectrumPalette(palette: string): boolean {
 
 /** Options for image processing */
 export interface ProcessImageOptions {
+  /** Scale uniformly and pad white to these dimensions before other processing */
+  fitToViewport?: Viewport
   format?: ImageFormat
   rotate?: RotationAngle
   invert?: boolean
   dithering?: DitheringOptions
-  /** Stamp the capture time in the bottom-right corner */
+  /** Stamp the capture time */
   timestamp?: boolean
+  timestampPosition?: TimestampPosition
 }
 
 /** Options for dithering */
@@ -321,14 +326,28 @@ export async function processImage(
   imageBuffer: Buffer,
   options: ProcessImageOptions = {}
 ): Promise<Buffer> {
-  const { format = 'png', rotate, invert, dithering, timestamp } = options
+  const { format = 'png', rotate, invert, dithering, timestamp, timestampPosition } = options
 
   let buffer = imageBuffer
+
+  if (options.fitToViewport) {
+    const { width, height } = options.fitToViewport
+    buffer = await timed('dither.resize', () =>
+      streamToBuffer(
+        gm(buffer)
+          .resize(width, height)
+          .background('white')
+          .gravity('Center')
+          .extent(width, height),
+        { format: 'png' },
+      ),
+    )
+  }
 
   // Annotate before dithering so the text survives 1-bit palettes and
   // format conversion like any other page content
   if (timestamp) {
-    buffer = await timed('dither.annotate', () => annotateTimestamp(buffer))
+    buffer = await timed('dither.annotate', () => annotateTimestamp(buffer, timestampPosition))
   }
 
   // Apply dithering if enabled (includes format conversion in single pipeline)
@@ -377,23 +396,36 @@ export function formatTimestamp(
 }
 
 /**
- * Stamps the capture time in the bottom-right corner on a white backing
+ * Stamps the capture time in the selected corner on a white backing
  * so it stays legible over busy dashboards.
  *
  * Falls back to the original image when annotation fails (e.g. no fonts
  * available to ImageMagick) — the overlay must never break delivery.
  */
-export async function annotateTimestamp(imageBuffer: Buffer): Promise<Buffer> {
+export async function annotateTimestamp(
+  imageBuffer: Buffer,
+  position: TimestampPosition = 'bottom-right',
+): Promise<Buffer> {
   try {
+    const { width } = await getImageInfo(imageBuffer)
+    // Keep at least 14pt; scale wider captures with point size = max(14, 14 * width / 800).
+    const pointSize = Math.max(14, 14 * width / 800)
+    const gravity = {
+      'bottom-right': 'SouthEast',
+      'bottom-left': 'SouthWest',
+      'top-left': 'NorthWest',
+      'top-right': 'NorthEast',
+    }[position]
+
     const image = gm(imageBuffer).out(
       '-gravity',
-      'SouthEast',
+      gravity,
       '-undercolor',
       'white',
       '-fill',
       'black',
       '-pointsize',
-      '14',
+      String(pointSize),
       '-annotate',
       '+4+4',
       ` ${formatTimestamp(new Date())} `,

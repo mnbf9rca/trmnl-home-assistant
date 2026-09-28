@@ -7,6 +7,8 @@
  * @module types/domain
  */
 
+import type { TIMESTAMP_POSITIONS } from '../html/shared/timestamp-position.js'
+
 // =============================================================================
 // VIEWPORT & DIMENSIONS
 // =============================================================================
@@ -34,6 +36,9 @@ export type ImageFormat = 'png' | 'jpeg' | 'bmp'
 
 /** Valid rotation angles in degrees */
 export type RotationAngle = 90 | 180 | 270
+
+/** Timestamp corner relative to the capture, before rotation */
+export type TimestampPosition = typeof TIMESTAMP_POSITIONS[number]
 
 /** Grayscale palette types for e-ink displays */
 export type GrayscalePalette = 'bw' | 'gray-4' | 'gray-16' | 'gray-256'
@@ -108,11 +113,15 @@ export interface ScreenshotParams {
   /** Crop region for partial screenshots */
   crop: CropRegion | null
 
+  /** Fit an enabled crop to the viewport before rotation (default: false) */
+  cropFit?: boolean
+
   /** Invert colors (for e-ink displays) */
   invert: boolean
 
-  /** Stamp the capture time in the bottom-right corner */
+  /** Stamp the capture time */
   timestamp?: boolean
+  timestampPosition?: TimestampPosition
 
   /** Output image format */
   format: ImageFormat
@@ -250,6 +259,9 @@ export interface Schedule {
   /** Crop region configuration */
   crop: CropRegion & { enabled: boolean }
 
+  /** Fit the crop to the viewport with white padding (default: false) */
+  crop_fit?: boolean
+
   /** Output image format */
   format: ImageFormat
 
@@ -274,8 +286,9 @@ export interface Schedule {
   /** Invert colors */
   invert: boolean
 
-  /** Stamp the capture time in the bottom-right corner */
+  /** Stamp the capture time */
   timestamp?: boolean
+  timestampPosition?: TimestampPosition
 
   /** Dithering configuration */
   dithering: DitheringConfig

@@ -402,13 +402,21 @@ class App {
     }
   }
 
-  async updateScheduleFromForm(): Promise<void> {
+  async updateScheduleFromForm(presetDithering?: Partial<Schedule['dithering']>): Promise<void> {
     const schedule = this.#scheduleManager.activeSchedule
     if (!schedule) return
 
     const oldName = schedule.name
 
     const updates = this.#buildScheduleUpdates(schedule)
+    if (presetDithering) {
+      updates.dithering = {
+        ...updates.dithering,
+        ...presetDithering,
+        palette: presetDithering.palette ?? 'gray-4',
+        bitDepth: presetDithering.bitDepth,
+      }
+    }
 
     await this.#scheduleManager.update(schedule.id, updates)
 
@@ -468,6 +476,7 @@ class App {
         height: parseIntOrDefault(input('s_height'), schedule.viewport.height),
       },
       device: select('devicePreset') || null,
+      crop_fit: checkbox('s_crop_fit'),
       crop: {
         enabled: checkbox('s_crop_enabled'),
         x: parseIntOrDefault(input('s_crop_x'), 0),
@@ -487,7 +496,9 @@ class App {
       wait: this.#parseWait(input('s_wait')),
       invert: checkbox('s_invert'),
       timestamp: checkbox('s_timestamp'),
+      timestampPosition: (select('s_timestamp_position') || 'bottom-right') as Schedule['timestampPosition'],
       dithering: {
+        bitDepth: schedule.dithering?.bitDepth,
         enabled: checkbox('s_dithering'),
         method: select('s_method') || 'floyd-steinberg',
         palette: select('s_palette') || 'gray-4',
@@ -821,8 +832,9 @@ class App {
   // DEVICE PRESET OPERATIONS
   // =============================================================================
 
-  applyDevicePreset(): void {
-    this.#devicePresetsManager.applyDevicePreset()
+  async applyDevicePreset(): Promise<void> {
+    const preset = this.#devicePresetsManager.applyDevicePreset()
+    if (preset) await this.updateScheduleFromForm(preset.dithering as Partial<Schedule['dithering']>)
   }
 
   applyDashboardSelection(): void {
