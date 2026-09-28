@@ -29,7 +29,7 @@ import {
   ByosLogin,
   ImportSchedules,
 } from './api-client.js'
-import { DEFAULT_PALETTE, type PaletteOption } from './palette-options.js'
+import type { PaletteOption } from './palette-options.js'
 import type {
   Schedule,
   CropRegion,
@@ -413,7 +413,7 @@ class App {
       updates.dithering = {
         ...updates.dithering,
         ...presetDithering,
-        palette: presetDithering.palette ?? DEFAULT_PALETTE,
+        palette: presetDithering.palette ?? 'gray-4',
         bitDepth: presetDithering.bitDepth,
       }
     }
@@ -500,7 +500,7 @@ class App {
         bitDepth: schedule.dithering?.bitDepth,
         enabled: checkbox('s_dithering'),
         method: select('s_method') || 'floyd-steinberg',
-        palette: select('s_palette') || DEFAULT_PALETTE,
+        palette: select('s_palette') || 'gray-4',
         gammaCorrection:
           (document.getElementById('s_gamma') as HTMLInputElement | null)
             ?.checked ?? true,

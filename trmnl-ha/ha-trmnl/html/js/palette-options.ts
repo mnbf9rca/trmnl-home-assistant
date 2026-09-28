@@ -13,9 +13,6 @@ export interface PaletteOption {
   label: string
 }
 
-/** Default palette when no explicit selection is provided */
-export const DEFAULT_PALETTE = 'gray-4'
-
 /** Grayscale palette options */
 export const GRAYSCALE_OPTIONS: PaletteOption[] = [
   { value: 'bw', label: '1-bit (B&W)' },
