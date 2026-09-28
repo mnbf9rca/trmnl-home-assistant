@@ -48,6 +48,7 @@ import type {
   CropRegion,
   ImageFormat,
   RotationAngle,
+  TimestampPosition,
   DitheringConfig,
 } from './types/domain.js'
 import { screenshotLogger, browserLogger } from './lib/logger.js'
@@ -160,6 +161,7 @@ export interface ScreenshotCaptureParams {
   crop?: CropRegion | null
   cropFit?: boolean
   timestamp?: boolean
+  timestampPosition?: TimestampPosition
 }
 
 /** Navigation result */
@@ -667,6 +669,7 @@ export class Browser {
     crop,
     cropFit,
     timestamp,
+    timestampPosition,
   }: ScreenshotCaptureParams): Promise<ScreenshotResult> {
     if (this.#busy) throw new Error('Browser is busy')
 
@@ -701,6 +704,7 @@ export class Browser {
           invert,
           dithering,
           timestamp: timestamp || TIMESTAMP_OVERLAY,
+          timestampPosition,
         }),
       )
       log.debug`Image processing took ${Date.now() - startProcess}ms`

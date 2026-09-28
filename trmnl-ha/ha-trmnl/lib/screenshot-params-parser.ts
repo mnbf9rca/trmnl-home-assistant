@@ -7,11 +7,13 @@
  */
 
 import { VALID_FORMATS, VALID_ROTATIONS } from '../const.js'
+import { TIMESTAMP_POSITIONS } from '../html/shared/timestamp-position.js'
 import type {
   Viewport,
   CropRegion,
   ImageFormat,
   RotationAngle,
+  TimestampPosition,
   DitheringConfig,
   DitheringMethod,
   Palette,
@@ -36,6 +38,7 @@ const SYSTEM_PARAMS = new Set([
   'crop_fit',
   'invert',
   'timestamp',
+  'timestamp_position',
   'format',
   'rotate',
   'lang',
@@ -67,6 +70,7 @@ export interface ParsedScreenshotParams {
   cropFit: boolean
   invert: boolean
   timestamp: boolean
+  timestampPosition: TimestampPosition
   format: ImageFormat
   rotate?: RotationAngle
   lang?: string
@@ -180,6 +184,9 @@ export class ScreenshotParamsParser {
 
     // Timestamp overlay
     const timestamp = url.searchParams.has('timestamp')
+    const corner = url.searchParams.get('timestamp_position') as TimestampPosition
+    const timestampPosition = TIMESTAMP_POSITIONS.includes(corner)
+      ? corner : 'bottom-right'
 
     // Format
     let format = (url.searchParams.get('format') || 'png') as ImageFormat
@@ -207,6 +214,7 @@ export class ScreenshotParamsParser {
       cropFit: url.searchParams.has('crop_fit'),
       invert,
       timestamp,
+      timestampPosition,
       format,
       rotate,
       lang,

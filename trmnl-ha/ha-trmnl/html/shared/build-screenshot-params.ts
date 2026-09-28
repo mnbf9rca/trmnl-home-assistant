@@ -91,6 +91,7 @@ export function buildScreenshotParams(
   if (schedule.timestamp) {
     params.append('timestamp', '')
   }
+  if (schedule.timestampPosition) params.append('timestamp_position', schedule.timestampPosition)
 
   // Dithering
   if (schedule.dithering?.enabled) {

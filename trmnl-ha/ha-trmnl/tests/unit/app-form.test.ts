@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, it } from 'bun:test'
 import presetsJson from '../../devices.json'
-import type { PresetsConfig, Schedule } from '../../types/domain.js'
+import type { PresetsConfig, Schedule, TimestampPosition } from '../../types/domain.js'
 import { buildSchedule } from '../helpers/schedule-fixtures.js'
 
 const presets = presetsJson as PresetsConfig
@@ -128,4 +128,27 @@ it('applies all preset dithering fields in one save, including replacing bit dep
     expect(saves[0]!.dithering.bitDepth).toBe(bitDepth)
     expect(saves[0]!.dithering.palette).toBe(palette)
   }
+})
+
+for (const position of ['bottom-right', 'bottom-left', 'top-left', 'top-right'] as TimestampPosition[]) {
+  it(`round-trips the ${position} timestamp corner through the form`, async () => {
+    const content = { innerHTML: '' }
+    inputs.set('tabContent', content)
+    inputs.set('s_timestamp', { checked: true })
+    inputs.set('s_timestamp_position', { value: position })
+    await app.updateScheduleFromForm()
+    expect(saves).toHaveLength(1)
+    expect(saves[0]!.timestampPosition).toBe(position)
+    await app.init()
+    const select = content.innerHTML.match(/<select[^>]*id="s_timestamp_position"[^>]*>([\s\S]*?)<\/select>/)?.[1]
+    expect(select).toContain(`value="${position}" selected`)
+  })
+}
+
+it('loads bottom-right for a schedule without a timestamp corner', async () => {
+  const content = { innerHTML: '' }
+  inputs.set('tabContent', content)
+  await app.init()
+  const select = content.innerHTML.match(/<select[^>]*id="s_timestamp_position"[^>]*>([\s\S]*?)<\/select>/)?.[1]
+  expect(select).toContain('value="bottom-right" selected')
 })
